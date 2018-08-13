@@ -1,0 +1,9 @@
+/usr/lib/python2.7
+/usr/lib/python2.7/plat-x86_64-linux-gnu
+/usr/lib/python2.7/lib-tk
+/usr/lib/python2.7/lib-dynload
+/usr/local/lib/python2.7/dist-packages
+/usr/lib/python2.7/dist-packages
+/home/rsi-psd-vm/spark-2.2.0-bin-hadoop2.7/python
+/home/rsi-psd-vm/spark-2.2.0-bin-hadoop2.7/python/lib/py4j-0.10.4-src.zip
+/usr/local/lib/python2.7/dist-packages/swagger_client-1.0.0-py2.7.egg

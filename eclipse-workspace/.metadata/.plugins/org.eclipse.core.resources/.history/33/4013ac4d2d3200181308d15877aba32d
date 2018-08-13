@@ -1,0 +1,5 @@
+eclipse.preferences.version=1
+encoding//src/get_metadata.py=utf-8
+encoding//src/tb_inmet_create_stations.py=utf-8
+encoding//src/tb_inmet_remove_all_devices.py=utf-8
+encoding//src/tb_inmet_utils.py=utf-8

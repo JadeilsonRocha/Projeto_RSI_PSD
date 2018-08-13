@@ -1,0 +1,26 @@
+import pika
+import time 
+
+ler  = open('Dados03.txt', 'r')
+lerDados = ler.readlines()
+ler.close()
+
+credentials = pika.PlainCredentials('psd', 'psd')
+connection = pika.BlockingConnection(pika.ConnectionParameters(
+               'localhost', 5672, 'psd', credentials))
+channel = connection.channel()
+channel.exchange_declare(exchange='amq.topic',
+                 exchange_type='topic', durable=True)
+
+for dados in lerDados:
+    dados = dados.replace("\r\n","")
+    print(dados)
+    channel.basic_publish(
+        exchange='amq.topic',  # amq.topic as exchange
+        routing_key='dados',   # Routing key used by producer
+        body= dados
+    )
+    print("Dados enviados!")
+    #time.sleep(1)
+print("TODOS OS Dados foram enviados!")
+connection.close()

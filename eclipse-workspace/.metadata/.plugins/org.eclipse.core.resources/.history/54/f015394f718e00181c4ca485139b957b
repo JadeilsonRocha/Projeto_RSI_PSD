@@ -1,0 +1,32 @@
+import sys
+
+from pyspark import SparkContext
+from pyspark.streaming import StreamingContext
+from mqtt import MQTTUtils
+
+if __name__ == "__main__":
+    if len(sys.argv) != 3:
+        print >> sys.stderr, "Usage: mqtt_wordcount.py < > <>"
+        exit(-1)
+
+    sc = SparkContext(appName="PythonStreamingMQTTWordCount")
+    ssc = StreamingContext(sc, 10)
+
+    brokerUrl = sys.argv[1]
+    topic = sys.argv[2]
+    print (brokerUrl)
+    print (topic)
+    lines = MQTTUtils.createStream(ssc, brokerUrl, topic)
+    counts = lines.flatMap(lambda line: line.split("\r\n "))
+    counts.pprint() 
+    counts = lines.flatMap(lambda line: line.split("/"))
+    counts.pprint()
+    counts = counts.map(lambda word: (word, 1))
+    counts.pprint()
+    counts = counts.reduceByKey(lambda a, b: a+b)
+
+    counts.pprint()
+    
+    ssc.start()
+ssc.awaitTermination()
+

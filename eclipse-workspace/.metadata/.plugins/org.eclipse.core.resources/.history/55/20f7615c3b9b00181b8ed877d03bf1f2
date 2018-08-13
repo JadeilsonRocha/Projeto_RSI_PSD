@@ -1,0 +1,80 @@
+import sys
+from pyspark import SparkContext
+from pyspark.streaming import StreamingContext
+from mqtt import MQTTUtils
+from __builtin__ import False
+import paho.mqtt.client as mqtt
+import time
+from pyspark.sql.functions import first
+
+def filtro(line):
+    if line != "" or line != None:
+        line_list = line.split(",")
+        return (line_list[2].replace("\r\n",""), [line_list[0]])
+    
+def agrupaTS(a,b):
+    return a + b
+    
+def getTimeMac(tuple):
+    maximo = int(max(tuple[1]))
+    minimo = int(min(tuple[1]))
+    diferenca = ((maximo - minimo)/60.0)
+    diferenca = round(diferenca,2)
+    if diferenca >= 2 and diferenca < 50:
+        return (tuple[0],diferenca)
+    
+def getUltimo(x):
+    y = x[-1]
+    print y.first
+    return y.first
+
+def limpeza(tuple2):
+    if tuple2 != None:
+        return True
+    return False
+
+def contar(total):
+    print total
+    timest = time.time()
+    topic_pub='v1/devices/me/telemetry'
+    client = mqtt.Client()
+    client.username_pw_set("3HRechKbVzPy1vEe0G9K")
+    client.connect('127.0.0.1', 18830, 1)
+    msg = '{"ts":"'+ str(timest) +'", "values":{"pico de pessoas":"'+ str(total) + '"}}'
+    #msg = '{"ts":"'+ str(timest) +'","pico de pessoas":"'+ str(total) + '"}'
+    #msg = '{"ts":1451649600512, "value":{"picos de pessoas":"'+ str(total) + '"}'    
+    #msg = '{"pico de pessoas":"'+ str(total) + '"}'
+    if client.publish(topic_pub, msg):
+        return  total
+    return total
+    #{"ts":1451649600512, "values":{"key1":"value1", "key2":"value2"}}
+    
+if __name__ == "__main__":
+
+    if len(sys.argv) != 3:
+        print >> sys.stderr, "Usage: mqtt_wordcount.py < > <>"
+        exit(-1)
+
+    sc = SparkContext(appName="PythonStreamingMQTTWordCount")
+    ssc = StreamingContext(sc, 30)
+
+    brokerUrl = sys.argv[1]
+    topic = sys.argv[2]
+    print (brokerUrl)
+    print (topic)
+    lines = MQTTUtils.createStream(ssc, brokerUrl, topic)
+    counts = lines.map(filtro)
+    windowedWordCounts = counts.reduceByKeyAndWindow(agrupaTS, None, 600, 30)
+    x= counts.map(getUltimo)
+    #x = x.reduceByKey( lambda a, b : )
+    windowedWordCounts = windowedWordCounts.map(getTimeMac)
+    windowedWordCounts = windowedWordCounts.filter(limpeza)
+    
+    x.pprint(75)
+    total = windowedWordCounts.count()
+    teste = total.map(contar)
+
+    #teste.pprint(100)
+    
+    ssc.start()
+ssc.awaitTermination()

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<?pydev-testrun version="1.0"?><pydev-testsuite>
+    <summary errors="2" failures="0" finished="true" name="Test Run: 0" tests="0" total_time="null"/>
+    <test location="/home/rsi-psd-vm/eclipse-workspace/psd/processamento.py" status="error" test="processamento" time="0">
+        <stdout/>
+        <stderr>
+            <![CDATA[Traceback (most recent call last):
+  File "/home/rsi-psd-vm/eclipse/plugins/org.python.pydev_6.0.0.201709191431/pysrc/_pydev_runfiles/pydev_runfiles.py", line 468, in __get_module_from_str
+    mod = __import__(modname)
+  File "/home/rsi-psd-vm/eclipse-workspace/psd/processamento.py", line 3, in <module>
+    ler  = open('Dados03.txt', 'r')
+IOError: [Errno 2] No such file or directory: 'Dados03.txt'
+ERROR: Module: processamento could not be imported (file: /home/rsi-psd-vm/eclipse-workspace/psd/processamento.py).
+]]>
+        </stderr>
+    </test>
+    <test location="/home/rsi-psd-vm/eclipse-workspace/psd/EnvioParaRabbitMQ.py" status="error" test="EnvioParaRabbitMQ" time="0">
+        <stdout/>
+        <stderr>
+            <![CDATA[Traceback (most recent call last):
+  File "/home/rsi-psd-vm/eclipse/plugins/org.python.pydev_6.0.0.201709191431/pysrc/_pydev_runfiles/pydev_runfiles.py", line 468, in __get_module_from_str
+    mod = __import__(modname)
+  File "/home/rsi-psd-vm/eclipse-workspace/psd/EnvioParaRabbitMQ.py", line 8, in <module>
+    ler  = open('limpo03.txt', 'r')
+IOError: [Errno 2] No such file or directory: 'limpo03.txt'
+ERROR: Module: EnvioParaRabbitMQ could not be imported (file: /home/rsi-psd-vm/eclipse-workspace/psd/EnvioParaRabbitMQ.py).
+]]>
+        </stderr>
+    </test>
+    <launch mode="run">
+        <launch_memento>
+            <![CDATA[<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<launchConfiguration local="true" path="psd psd"/>
+]]>
+        </launch_memento>
+    </launch>
+</pydev-testsuite>

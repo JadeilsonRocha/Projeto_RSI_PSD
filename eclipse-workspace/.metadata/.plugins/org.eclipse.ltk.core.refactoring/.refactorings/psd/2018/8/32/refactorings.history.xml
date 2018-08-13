@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Rename resource &apos;psd/send-randomized-windspeed-1.py&apos; to &apos;envio_ThinksBoard.py&apos;" description="Rename resource &apos;send-randomized-windspeed-1.py&apos;" flags="7" id="org.eclipse.ltk.core.refactoring.rename.resource" input="send-randomized-windspeed-1.py" name="envio_ThinksBoard.py" stamp="1533659306192" updateReferences="true"/>
+</session>

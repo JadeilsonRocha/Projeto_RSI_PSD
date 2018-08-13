@@ -1,0 +1,74 @@
+import sys
+from pyspark import SparkContext
+from pyspark.streaming import StreamingContext
+from mqtt import MQTTUtils
+from pyspark.sql.functions import explode, window
+from macpath import split
+from __builtin__ import False
+import paho.mqtt.client as mqtt
+
+topic_pub='v1/devices/me/telemetry'
+
+client = mqtt.Client()
+
+client.username_pw_set("3HRechKbVzPy1vEe0G9K")
+client.connect('127.0.0.1', 18830, 1)
+
+
+def filtro(line):
+    if line != "" or line != None:
+        line_list = line.split(",")
+        return (line_list[2].replace("\r\n",""), [line_list[0]])
+    
+def agrupaTS(a,b):
+    return a + b
+    
+def getTimeMac(tuple):
+    maximo = int(max(tuple[1]))
+    minimo = int(min(tuple[1]))
+    diferenca = ((maximo - minimo)/60.0)
+    diferenca = round(diferenca,2)
+    if diferenca >= 0.2 and diferenca < 60:
+        return (tuple[0],diferenca)
+
+def limpeza(tuple2):
+    if tuple2 != None:
+        return True
+    return False
+
+def envioThingsboard(total):
+    msg = '{"windSpeed":"'+ str(total) + '"}'
+    if total != None:
+        client.publish(topic_pub, msg)
+        return  total
+    return total
+
+if __name__ == "__main__":
+    if len(sys.argv) != 3:
+        print >> sys.stderr, "Usage: mqtt_wordcount.py < > <>"
+        exit(-1)
+
+    sc = SparkContext(appName="PythonStreamingMQTTWordCount")
+    ssc = StreamingContext(sc, 5)
+
+    brokerUrl = sys.argv[1]
+    topic = sys.argv[2]
+    print (brokerUrl)
+    print (topic)
+    lines = MQTTUtils.createStream(ssc, brokerUrl, topic)
+    counts = lines.map(filtro)
+    windowedWordCounts = counts.reduceByKeyAndWindow(agrupaTS, None, 30, 10)
+    windowedWordCounts = windowedWordCounts.map(getTimeMac)
+    windowedWordCounts = windowedWordCounts.filter(limpeza)
+    windowedWordCounts.pprint(75)
+    windowedWordCounts = windowedWordCounts.count()
+    #windowedWordCounts = windowedWordCounts.reduceByKeyAndWindow(envioThingsboard, None, 30, 10)
+
+#     msg = '{"windSpeed":"'+ str(windowedWordCounts) + '"}'
+#     client.publish(topic_pub, msg)
+    print 1
+
+    windowedWordCounts.pprint(75)
+    
+    ssc.start()
+ssc.awaitTermination()

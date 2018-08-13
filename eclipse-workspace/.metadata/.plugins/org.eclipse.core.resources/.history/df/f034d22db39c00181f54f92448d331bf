@@ -1,0 +1,101 @@
+import sys
+from pyspark import SparkContext
+from pyspark.streaming import StreamingContext
+from mqtt import MQTTUtils
+from __builtin__ import False
+import paho.mqtt.client as mqtt
+import time
+from pyspark.sql.functions import first
+
+timestamp = 1533909154000
+
+def filtro(line):
+    if line != "" or line != None:
+        line_list = line.split(",")
+        return (line_list[2].replace("\r\n",""), [line_list[0]])
+    
+def filtro2(line):
+    if line != "" or line != None:
+        line_list = line.split(",")
+        return (line_list[0], [line_list[2].replace("\r\n","")])
+    
+def agrupaTS(a,b):
+    return a + b
+
+def agrupaTS2(a,b):
+    return b + a
+    
+def getTimeMac(tuple):
+    maximo = int(max(tuple[1]))
+    minimo = int(min(tuple[1]))
+    diferenca = ((maximo - minimo)/60.0)
+    diferenca = round(diferenca,2)
+    if diferenca >=0.2 and diferenca < 50:
+        return (minimo, 1)
+    
+def getUltimo(x):
+    y = x[-1]
+    #y = max(y)
+    print y
+    return y
+
+def limpeza(tuple2):
+    if tuple2 != None:
+        return True
+    return False
+
+def contar(total):
+    global timestamp
+    print total
+    topic_pub='v1/devices/me/telemetry'
+    client = mqtt.Client()
+    client.username_pw_set("3HRechKbVzPy1vEe0G9K")
+    client.connect('127.0.0.1', 18830, 1)
+    msg = '{"ts":"'+ str(timestamp) +'", "values":{"pico de pessoas":"'+ str(total) + '"}}'    
+    #msg = '{"pico de pessoas":"'+ str(total) + '"}'
+    if client.publish(topic_pub, msg):
+        timestamp+=30
+        return  total
+    return total
+
+def getTimeQtd(tp1, tp2):    
+    ts = []
+    ts.append(tp1[0])
+    ts.append(tp2[0])
+    
+    return (min(ts), int(tp1[1]) + int(tp2[1]))
+    
+if __name__ == "__main__":
+
+    if len(sys.argv) != 3:
+        print >> sys.stderr, "Usage: mqtt_wordcount.py < > <>"
+        exit(-1)
+
+    sc = SparkContext(appName="PythonStreamingMQTTWordCount")
+    ssc = StreamingContext(sc, 180)
+
+    brokerUrl = sys.argv[1]
+    topic = sys.argv[2]
+    print (brokerUrl)
+    print (topic)
+    lines = MQTTUtils.createStream(ssc, brokerUrl, topic)
+    counts = lines.map(filtro)
+    teste = lines.map(filtro2)
+    windowedWordCounts = counts.reduceByKeyAndWindow(agrupaTS, None, 180, 15)
+    #x = teste.reduceByKey(agrupaTS2)
+    #x = x.count()
+    #x.pprint(50)
+    
+    windowedWordCounts = windowedWordCounts.map(getTimeMac)
+    windowedWordCounts = windowedWordCounts.filter(limpeza)
+
+    windowedWordCounts = windowedWordCounts.reduce(getTimeQtd)
+    
+    windowedWordCounts.pprint(50)
+
+    #total = windowedWordCounts.count()
+    #teste = total.map(contar)
+    #teste.pprint(100)
+    
+    ssc.start()
+ssc.awaitTermination()

@@ -1,0 +1,103 @@
+import sys
+
+from pyspark import SparkContext
+from pyspark.streaming import StreamingContext
+from mqtt import MQTTUtils
+from pyspark.sql.functions import explode, window
+from macpath import split
+
+def filtro(line):
+    if line != "" or line != None:
+        line_list = line.split(",")
+        return (line_list[2].replace("\r\n",""), [line_list[0]])
+    
+def agrupaTS(a,b):
+    return a + b
+    
+ 
+if __name__ == "__main__":
+    if len(sys.argv) != 3:
+        print >> sys.stderr, "Usage: mqtt_wordcount.py < > <>"
+        exit(-1)
+
+    sc = SparkContext(appName="PythonStreamingMQTTWordCount")
+    ssc = StreamingContext(sc, 200)
+
+    brokerUrl = sys.argv[1]
+    topic = sys.argv[2]
+    print (brokerUrl)
+    print (topic)
+    
+    lines = MQTTUtils.createStream(ssc, brokerUrl, topic)
+    counts = lines.map(filtro)
+    counts = counts.reduceByKey(agrupaTS)
+    counts.pprint(1000)
+    #counts = lines.flatMap(lambda line: line.split(","))
+    #counts.pprint(2)
+
+    #windowedWordCounts = counts.reduceByKeyAndWindow(lambda x, y: x + y, None, 30, 10)
+    #counts = counts.map(lambda word: (word, 1))
+    #counts = counts.reduceByKey(lambda a, b: a+b)
+
+    #counts.pprint()
+    #windowedWordCounts.pprint()
+    ssc.start()
+ssc.awaitTermination()
+
+
+
+
+
+
+
+
+'''import sys
+
+from pyspark import SparkContext
+from pyspark.streaming import StreamingContext
+from mqtt import MQTTUtils
+from collections import defaultdict
+
+dic = defaultdict(list)
+
+def getMAC(line):
+    global dic
+    line = line.replace("\r\n", "")
+    lista=[None, None]
+    lista[0]=line.split(',')[2]
+    lista[1]=line.split(',')[0]        
+    dic[lista[0]].append(lista[1])
+    return line.split(',')[2]
+
+
+def getMAC(line):
+    line = line.replace("\r\n", "")
+    return line.split(',')[2]
+
+if __name__ == "__main__":
+    if len(sys.argv) != 3:
+        print >> sys.stderr, "Usage: mqtt_wordcount.py < > <>"
+        exit(-1)
+
+    sc = SparkContext(appName="PythonStreamingMQTTWordCount")
+    ssc = StreamingContext(sc, 30)
+
+    brokerUrl = sys.argv[1]
+    topic = sys.argv[2]
+    print (brokerUrl)
+    print (topic)
+    lines = MQTTUtils.createStream(ssc, brokerUrl, topic)
+    counts = lines.flatMap(lambda line: line.split("\r\n"))
+    #counts.pprint() 
+    counts = lines.map(getMAC)
+    #counts.pprint()
+    counts = counts.map(lambda word: (word, 1))
+    counts = counts.reduceByKey(lambda a, b: a+b)
+    
+    counts.pprint()
+    for i, j in dic:
+        print i +" "+ j
+
+    ssc.start()
+ssc.awaitTermination()'''
+

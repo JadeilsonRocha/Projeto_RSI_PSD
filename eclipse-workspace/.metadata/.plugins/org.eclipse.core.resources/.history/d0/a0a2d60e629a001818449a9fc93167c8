@@ -1,0 +1,18 @@
+import paho.mqtt.client as mqtt
+from time import sleep
+import random
+
+#broker="test.mosquitto.org"
+topic_pub='v1/devices/me/telemetry'
+
+client = mqtt.Client()
+
+client.username_pw_set("3HRechKbVzPy1vEe0G9K")
+client.connect('127.0.0.1', 18830, 1)
+
+while True:
+    x = random.randrange(30, 80)
+    print x
+    msg = '{"Pico_Pessoas":"'+ str(x) + '"}'
+    client.publish(topic_pub, msg)
+    sleep(1)

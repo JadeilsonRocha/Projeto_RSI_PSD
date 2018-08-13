@@ -1,0 +1,37 @@
+import pika
+import time 
+from py4j.tests.java_gateway_test import sleep
+
+ler  = open('Dados03.txt', 'r')
+lerDados = ler.readlines()
+ler.close()
+
+credentials = pika.PlainCredentials('psd', 'psd')
+connection = pika.BlockingConnection(pika.ConnectionParameters(
+               'localhost', 5672, 'psd', credentials))
+channel = connection.channel()
+channel.exchange_declare(exchange='amq.topic',
+                 exchange_type='topic', durable=True)
+
+
+
+timestemp = lerDados[0].split('/')[0].split(';')[1]
+timestemp = int(timestemp[:-3])
+cont =0 
+for i in lerDados:
+    time = i.split('/')[0].split(';')[1]
+    time = int(time[:-3])    
+    if time == timestemp+1:
+        print(cont)
+        timestemp+=1
+        sleep(1)
+            
+    channel.basic_publish(
+            exchange='amq.topic',  # amq.topic as exchange
+            routing_key='hello',   # Routing key used by producer
+            body= i
+        )
+    cont+=1
+   
+
+connection.close()

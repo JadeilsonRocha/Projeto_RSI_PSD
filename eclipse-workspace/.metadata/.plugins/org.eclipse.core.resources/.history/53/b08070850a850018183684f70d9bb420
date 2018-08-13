@@ -1,0 +1,24 @@
+#!/usr/bin/env python
+import pika
+import time
+import datetime
+
+ler  = open('Dados03.txt', 'r')
+lerDados = ler.readlines()
+ler.close()
+
+
+connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+
+channel = connection.channel()
+
+channel.queue_declare(queue='psd')
+
+for  dados in lerDados:
+	dados = dados.replace("\r\n","")
+
+	channel.basic_publish(exchange='',
+	                      routing_key='dados',
+                      	body=dados)
+print(" [x] Sent 'Dados enviados!'")
+connection.close()

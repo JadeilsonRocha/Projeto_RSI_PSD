@@ -1,0 +1,47 @@
+#!/usr/bin/env python
+import pika
+import sys
+
+if len(sys.argv) != 4 :
+    print >> sys.stderr, "Usage: %s [CloudAMQP Host] [CloudAMQP: User & Vhost] [CloudAMQP Password]..." % (sys.argv[0],)
+    sys.exit(1)
+
+host = sys.argv[1]  
+user_vhost = sys.argv[2]
+passwd = sys.argv[3]
+
+credentials = pika.PlainCredentials(user_vhost, passwd)
+connection = pika.BlockingConnection(pika.ConnectionParameters(host, 5672, user_vhost, credentials))
+channel = connection.channel()
+
+channel.exchange_declare(exchange='topic_logs',
+                         exchange_type='topic')
+
+result = channel.queue_declare(exclusive=True)
+queue_name = result.method.queue
+
+channel.queue_bind(exchange='topic_logs',
+                       queue=queue_name,
+                       routing_key='#')
+
+print ' [*] Waiting for logs. To exit press CTRL+C'
+
+def callback(ch, method, properties, body):
+    print " [x] %r:%r" % (method.routing_key, body,)
+    infor = method.routing_key.split(".")
+    dados = body.split(",")
+    
+    if infor[1]==  "precipitacao"  and int(dados[1] )>100:
+   	channel.basic_publish(exchange='topic_logs', routing_key=infor[0]+".alerta.inundacao", body=dados[1])
+   	
+    elif infor[1]=="velocidade-vento" and int(dados[1])>100:
+   	channel.basic_publish(exchange='topic_logs', routing_key=infor[0]+".alerta.ventania", body=dados[1])
+   	
+    elif infor[1]=="radiacao-uv" and int(dados[1])>5:
+   	channel.basic_publish(exchange='topic_logs', routing_key=infor[0]+".alerta.insolacao", body=dados[1]) 
+   	
+channel.basic_consume(callback,
+                      queue=queue_name,
+                      no_ack=True)
+
+channel.start_consuming()

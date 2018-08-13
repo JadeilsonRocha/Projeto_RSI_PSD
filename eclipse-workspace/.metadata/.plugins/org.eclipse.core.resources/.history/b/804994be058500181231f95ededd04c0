@@ -1,0 +1,28 @@
+#!/usr/bin/env python
+import pika
+import time
+import datetime
+
+ler  = open('Dados03.txt', 'r')
+lerDados = ler.readlines()
+ler.close()
+
+
+connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+
+channel = connection.channel()
+
+channel.queue_declare(queue='dados')
+
+for  dados in lerDados:
+	dados = dados.replace("\r\n","")
+	#data = dados.split("/")[0].split(" ")[0]
+	#hora = dados.split("/")[0].split(" ")[1]
+	#datetime.datetime(data.split("-")[0], data.split("-")[1], data.split("-")[2], hora.split(":")[0], hora.split(":")[1], hora.split(":")[2])
+	#ts = datetime.timestamp()
+	#time.sleep(2)
+	channel.basic_publish(exchange='',
+	                      routing_key='dados',
+                      	body=dados)
+print(" [x] Sent 'Dados enviados!'")
+connection.close()

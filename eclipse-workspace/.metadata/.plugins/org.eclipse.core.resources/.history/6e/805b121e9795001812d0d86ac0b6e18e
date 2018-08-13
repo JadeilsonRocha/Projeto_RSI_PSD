@@ -1,0 +1,68 @@
+import sys
+
+from pyspark import SparkContext
+from pyspark.streaming import StreamingContext
+from mqtt import MQTTUtils
+from collections import defaultdict
+
+dic = defaultdict(list)
+
+def getMAC(line):
+    global dic
+    line = line.replace("\r\n", "")
+    lista=[]
+    lista[0]=line.split(',')[2]
+    lista[1]=line.split(',')[0]
+    if lista[0] in dic:
+        
+    dic[lista[0]].append(lista[1])
+    return line.split(',')[2], line.split(',')[0]
+
+
+def getMAC(line):
+    global dic
+    line = line.replace("\r\n", " ")
+    line = line.split(" ")
+    print line
+    lista=[None, None]
+    for i in line:
+        print i
+        lista[0]=i.split(',')[2]
+        lista[1]=i.split(',')[0]        
+        dic[lista[0]].append(lista[1])
+    return i.split(',')[2], i.split(',')[0]
+
+a = getMAC(string)
+def setDic(mac,timestamp):
+    global dic
+
+'''
+def getMAC(line):
+    line = line.replace("\r\n", "")
+    return line.split(',')[2]'''
+
+if __name__ == "__main__":
+    if len(sys.argv) != 3:
+        print >> sys.stderr, "Usage: mqtt_wordcount.py < > <>"
+        exit(-1)
+
+    sc = SparkContext(appName="PythonStreamingMQTTWordCount")
+    ssc = StreamingContext(sc, 30)
+
+    brokerUrl = sys.argv[1]
+    topic = sys.argv[2]
+    print (brokerUrl)
+    print (topic)
+    lines = MQTTUtils.createStream(ssc, brokerUrl, topic)
+    counts = lines.flatMap(lambda line: line.split("\r\n"))
+    #counts.pprint() 
+    counts = lines.map(getMAC)
+    #counts.pprint()
+    counts = counts.map(lambda word: (word, 1))
+    counts = counts.reduceByKey(lambda a, b: a+b)
+    
+    counts.pprint()
+
+    ssc.start()
+ssc.awaitTermination()
+

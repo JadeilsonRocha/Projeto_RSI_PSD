@@ -1,0 +1,14 @@
+ler  = open('Dados03.txt', 'r')
+lerDados = ler.readlines()
+ler.close()
+
+regex_mac = r'\w{2}:\w{2}:\w{2}:\w{2}:\w{    2}:\w{2}'   
+regex_timestamp = r'\d{10}.\d+' 
+regex_rssi = r'-\d+'
+timestamp_lista = [] 
+
+for item in lerDados:
+    if re.findall(regex_mac) in item:
+        timestamp_lista.append(item.find(re.findall(regex_timestamp)))
+        
+print timestamp_lista
